@@ -327,7 +327,7 @@ LIBBLURAY_PATCH = libbluray-$(LIBBLURAY_VER).patch
 $(ARCHIVE)/$(LIBBLURAY_SOURCE):
 	$(DOWNLOAD) ftp.videolan.org/pub/videolan/libbluray/$(LIBBLURAY_VER)/$(LIBBLURAY_SOURCE)
 
-$(D)/libbluray: $(D)/bootstrap $(ARCHIVE)/$(LIBBLURAY_SOURCE)
+$(D)/libbluray: $(D)/bootstrap $(ARCHIVE)/$(LIBBLURAY_SOURCE) $(D)/freetype
 	$(START_BUILD)
 	$(REMOVE)/libbluray-$(LIBBLURAY_VER)
 	$(UNTAR)/$(LIBBLURAY_SOURCE)
@@ -345,7 +345,6 @@ $(D)/libbluray: $(D)/bootstrap $(ARCHIVE)/$(LIBBLURAY_SOURCE)
 			--disable-doxygen-pdf \
 			--disable-examples \
 			--without-libxml2 \
-			--without-freetype \
 		; \
 		$(MAKE); \
 		$(MAKE) install DESTDIR=$(TARGET_DIR)
@@ -2422,6 +2421,32 @@ $(D)/pixman: $(ARCHIVE)/$(PIXMAN_SOURCE) $(D)/bootstrap $(D)/zlib $(D)/libpng
 	$(TOUCH)
 
 #
+# atomic_ops library
+#
+ATOMIC_OPS_VER = 7.6.8
+ATOMIC_OPS_SOURCE = libatomic_ops-$(ATOMIC_OPS_VER).tar.gz
+
+$(ARCHIVE)/$(ATOMIC_OPS_SOURCE):
+	$(DOWNLOAD)  https://github.com/ivmai/libatomic_ops/releases/download/v7.6.8/$(ATOMIC_OPS_SOURCE)
+
+$(D)/atomic_ops: $(ARCHIVE)/$(ATOMIC_OPS_SOURCE) $(D)/bootstrap
+	$(START_BUILD)
+	$(REMOVE)/libatomic_ops-$(ATOMIC_OPS_VER)
+	$(UNTAR)/$(ATOMIC_OPS_SOURCE)
+	$(CHDIR)/libatomic_ops-$(ATOMIC_OPS_VER); \
+		$(CONFIGURE) \
+			--prefix=/usr \
+			--enable-shared  \
+			--disable-static \
+			; \
+		$(MAKE) all; \
+		$(MAKE) install DESTDIR=$(TARGET_DIR)
+	$(REWRITE_LIBTOOL)/libatomic_ops.la
+	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/atomic_ops.pc
+	$(REMOVE)/libatomic_ops-$(ATOMIC_OPS_VER)
+	$(TOUCH)
+
+#
 # The Cairo library GObject wrapper library
 #
 CAIRO_VER = 1.16.0
@@ -2449,6 +2474,8 @@ $(D)/cairo: $(ARCHIVE)/$(CAIRO_SOURCE) $(D)/bootstrap $(D)/libglib2 $(D)/libpng 
 			$(CAIRO_OPTS) \
 			--disable-gl \
 			--enable-tee \
+			--enable-fontconfig \
+			--enable-freetype \
 		; \
 		$(MAKE) all; \
 		$(MAKE) install DESTDIR=$(TARGET_DIR)
@@ -2458,11 +2485,13 @@ $(D)/cairo: $(ARCHIVE)/$(CAIRO_SOURCE) $(D)/bootstrap $(D)/libglib2 $(D)/libpng 
 	rm -rf $(TARGET_LIB_DIR)/cairo/.debug/cairo-fdr*
 	rm -rf $(TARGET_LIB_DIR)/cairo/.debug/cairo-sphinx*
 	$(REWRITE_LIBTOOL)/libcairo.la
+	$(REWRITE_LIBTOOL)/libcairo-gobject.la
 	$(REWRITE_LIBTOOL)/libcairo-script-interpreter.la
 	$(REWRITE_LIBTOOL)/libcairo-gobject.la
 	$(REWRITE_LIBTOOL)/cairo/libcairo-trace.la
 	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/cairo.pc
 	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/cairo-ft.pc
+	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/cairo-fc.pc
 	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/cairo-glesv2.pc
 	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/cairo-egl.pc
 	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/cairo-gobject.pc
@@ -2484,17 +2513,19 @@ MONO_SOURCE = mono-$(MONO_VER).tar.xz
 $(ARCHIVE)/$(MONO_SOURCE):
 	$(DOWNLOAD) https://download.mono-project.com/sources/mono/$(MONO_SOURCE)
 
-$(D)/mono: $(ARCHIVE)/$(MONO_SOURCE) $(D)/bootstrap $(D)/libglib2 $(D)/libpng $(D)/pixman $(D)/zlib $(D)/cairo
+$(D)/mono: $(ARCHIVE)/$(MONO_SOURCE) $(D)/bootstrap $(D)/libglib2 $(D)/libpng $(D)/pixman $(D)/zlib $(D)/cairo $(D)/atomic_ops
 	$(START_BUILD)
 	$(REMOVE)/mono-$(MONO_VER)
 	$(UNTAR)/$(MONO_SOURCE)
 	$(CHDIR)/mono-$(MONO_VER); \
-		./configure --prefix=/usr; \
-		make -j16; \
-		make -j16 install DESTDIR=$(TARGET_DIR); \
-		CFLAGS="-mfloat-abi=hard -I./libatomic_ops/src" $(CONFIGURE)  \
-			--prefix=/usr --disable-mcs-build \
-		; \
+		./configure --prefix=/usr --disable-monodoc; \
+		$(MAKE); \
+		$(MAKE) install DESTDIR=$(TARGET_DIR);
+	$(REMOVE)/mono-$(MONO_VER) 
+	$(UNTAR)/$(MONO_SOURCE)
+	$(CHDIR)/mono-$(MONO_VER); \
+		$(CONFIGURE)  \
+			--prefix=/usr --disable-mcs-build --disable-monodoc; \
 		$(MAKE); \
 		$(MAKE) install DESTDIR=$(TARGET_DIR)
 	$(REMOVE)/mono-$(MONO_VER)
