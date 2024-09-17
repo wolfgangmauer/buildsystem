@@ -137,17 +137,19 @@ $(D)/driver: $(ARCHIVE)/$(DRIVER_SRC) $(D)/bootstrap $(D)/kernel
 	install -m 0755 $(TARGET_DIR)/usr/share/platform/dvb_init $(TARGET_DIR)/usr/bin/dvb_init
 	$(REMOVE)/platform-util-$(BOXTYPE)
 	$(DEPMOD) -ae -b $(TARGET_DIR) -r $(KERNEL_VER)
-	$(MAKE) install-v3ddriver
-	$(MAKE) install-v3ddriver-header
+	$(MAKE) glesv2
 	$(TOUCH)
 	
-$(D)/install-v3ddriver: $(ARCHIVE)/$(LIBGLES_SRC)
+$(D)/glesv2: $(ARCHIVE)/$(LIBGLES_SRC) $(ARCHIVE)/$(LIBGLES_HEADERS)
 	install -d $(TARGET_LIB_DIR)
 	unzip -o $(ARCHIVE)/$(LIBGLES_SRC) -d $(TARGET_LIB_DIR)
-
-$(D)/install-v3ddriver-header: $(ARCHIVE)/$(LIBGLES_HEADERS)
+	ln -sf v3ddriver/libv3ddriver.so $(TARGET_LIB_DIR)/libGLESv2.so
+	ln -sf v3ddriver/libv3ddriver.so $(TARGET_LIB_DIR)/libEGL.so
+	install -m 0755 $(BASE_DIR)/machine/$(BOXTYPE)/files/glesv2.pc $(PKG_CONFIG_PATH)
+	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/glesv2.pc
 	install -d $(TARGET_INCLUDE_DIR)
 	unzip -o $(ARCHIVE)/$(LIBGLES_HEADERS) -d $(TARGET_INCLUDE_DIR)
+	$(TOUCH)
 
 #
 # release
