@@ -1161,6 +1161,7 @@ $(D)/expat: $(D)/bootstrap $(ARCHIVE)/$(EXPAT_SOURCE)
 #
 FONTCONFIG_VER = 2.11.93
 FONTCONFIG_SOURCE = fontconfig-$(FONTCONFIG_VER).tar.bz2
+FONTCONFIG_PATCH = fontconfig-glibc-$(FONTCONFIG_VER).patch
 
 $(ARCHIVE)/$(FONTCONFIG_SOURCE):
 	$(DOWNLOAD) https://www.freedesktop.org/software/fontconfig/release/$(FONTCONFIG_SOURCE)
@@ -1170,11 +1171,12 @@ $(D)/fontconfig: $(D)/bootstrap $(D)/freetype $(D)/expat $(ARCHIVE)/$(FONTCONFIG
 	$(REMOVE)/fontconfig-$(FONTCONFIG_VER)
 	$(UNTAR)/$(FONTCONFIG_SOURCE)
 	$(CHDIR)/fontconfig-$(FONTCONFIG_VER); \
+		$(call apply_patches, $(FONTCONFIG_PATCH)); \
 		$(CONFIGURE) \
 			--prefix=/usr \
 			--with-freetype-config=$(HOST_DIR)/bin/freetype-config \
-			--with-expat-includes=$(TARGET_DIR)/usr/include \
-			--with-expat-lib=$(TARGET_DIR)/usr/lib \
+			--with-expat-includes=$(TARGET_INCLUDE_DIR) \
+			--with-expat-lib=$(TARGET_LIB_DIR) \
 			--sysconfdir=/etc \
 			--disable-docs \
 		; \
@@ -2427,21 +2429,19 @@ CAIRO_SOURCE = cairo-$(CAIRO_VER).tar.xz
 CAIRO_PATCH  = cairo-$(CAIRO_VER)-get_bitmap_surface.diff
 
 CAIRO_OPTS ?= \
-		--disable-egl \
-		--disable-glesv2
+		--enable-egl=yes \
+		--enable-glesv2
 
 $(ARCHIVE)/$(CAIRO_SOURCE):
 	$(DOWNLOAD) https://www.cairographics.org/releases/$(CAIRO_SOURCE)
 
-$(D)/cairo: $(ARCHIVE)/$(CAIRO_SOURCE) $(D)/bootstrap $(D)/libglib2 $(D)/libpng $(D)/pixman $(D)/zlib
+$(D)/cairo: $(ARCHIVE)/$(CAIRO_SOURCE) $(D)/bootstrap $(D)/libglib2 $(D)/libpng $(D)/pixman $(D)/zlib $(D)/freetype $(D)/fontconfig $(D)/glesv2
 	$(START_BUILD)
 	$(REMOVE)/cairo-$(CAIRO_VER)
 	$(UNTAR)/$(CAIRO_SOURCE)
 	$(CHDIR)/cairo-$(CAIRO_VER); \
 		$(call apply_patches, $(CAIRO_PATCH)); \
-		$(BUILDENV) \
-		ax_cv_c_float_words_bigendian="no" \
-		./configure $(CONFIGURE_OPTS) \
+		$(CONFIGURE) ax_cv_c_float_words_bigendian="no" \
 			--prefix=/usr \
 			--with-x=no \
 			--disable-xlib \
@@ -2463,6 +2463,8 @@ $(D)/cairo: $(ARCHIVE)/$(CAIRO_SOURCE) $(D)/bootstrap $(D)/libglib2 $(D)/libpng 
 	$(REWRITE_LIBTOOL)/cairo/libcairo-trace.la
 	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/cairo.pc
 	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/cairo-ft.pc
+	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/cairo-glesv2.pc
+	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/cairo-egl.pc
 	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/cairo-gobject.pc
 	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/cairo-pdf.pc
 	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/cairo-png.pc
@@ -2471,6 +2473,31 @@ $(D)/cairo: $(ARCHIVE)/$(CAIRO_SOURCE) $(D)/bootstrap $(D)/libglib2 $(D)/libpng 
 	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/cairo-svg.pc
 	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/cairo-tee.pc
 	$(REMOVE)/cairo-$(CAIRO_VER)
+	$(TOUCH)
+
+#
+# The Mono Project
+#
+MONO_VER = 6.12.0.199
+MONO_SOURCE = mono-$(MONO_VER).tar.xz
+
+$(ARCHIVE)/$(MONO_SOURCE):
+	$(DOWNLOAD) https://download.mono-project.com/sources/mono/$(MONO_SOURCE)
+
+$(D)/mono: $(ARCHIVE)/$(MONO_SOURCE) $(D)/bootstrap $(D)/libglib2 $(D)/libpng $(D)/pixman $(D)/zlib $(D)/cairo
+	$(START_BUILD)
+	$(REMOVE)/mono-$(MONO_VER)
+	$(UNTAR)/$(MONO_SOURCE)
+	$(CHDIR)/mono-$(MONO_VER); \
+		./configure --prefix=/usr; \
+		make -j16; \
+		make -j16 install DESTDIR=$(TARGET_DIR); \
+		CFLAGS="-mfloat-abi=hard -I./libatomic_ops/src" $(CONFIGURE)  \
+			--prefix=/usr --disable-mcs-build \
+		; \
+		$(MAKE); \
+		$(MAKE) install DESTDIR=$(TARGET_DIR)
+	$(REMOVE)/mono-$(MONO_VER)
 	$(TOUCH)
 
 #
