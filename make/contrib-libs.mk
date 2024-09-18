@@ -2447,6 +2447,31 @@ $(D)/atomic_ops: $(ARCHIVE)/$(ATOMIC_OPS_SOURCE) $(D)/bootstrap
 	$(TOUCH)
 
 #
+# rustc library
+#
+RUSTC_VER = 1.32.0
+RUSTC_SOURCE = rustc-$(RUSTC_VER)-src.tar.gz
+
+$(ARCHIVE)/$(RUSTC_SOURCE):
+	$(DOWNLOAD) https://static.rust-lang.org/dist/$(RUSTC_SOURCE)
+
+$(D)/rustc: $(ARCHIVE)/$(RUSTC_SOURCE) $(D)/bootstrap
+	$(START_BUILD)
+	$(REMOVE)/rustc-$(RUSTC_VER)-src
+	$(UNTAR)/$(RUSTC_SOURCE)
+	$(CHDIR)/rustc-$(RUSTC_VER)-src; \
+		$(CONFIGURE) \
+			--prefix=/usr \
+			; \
+		export RUSTFLAGS="$RUSTFLAGS -C link-args=-lffi"; \
+		python3 ./x.py build --exclude src/tools/miri; \
+		$(MAKE) install DESTDIR=$(TARGET_DIR)
+	$(REWRITE_LIBTOOL)/libatomic_ops.la
+	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/atomic_ops.pc
+	$(REMOVE)/rustc-$(RUSTC_VER)-src
+	$(TOUCH)
+
+#
 # The Cairo library GObject wrapper library
 #
 CAIRO_VER = 1.16.0
