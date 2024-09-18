@@ -2447,28 +2447,27 @@ $(D)/atomic_ops: $(ARCHIVE)/$(ATOMIC_OPS_SOURCE) $(D)/bootstrap
 	$(TOUCH)
 
 #
-# rustc library
+# rsvg library
 #
-RUSTC_VER = 1.32.0
-RUSTC_SOURCE = rustc-$(RUSTC_VER)-src.tar.gz
+RSVG_VER = 2.40.20
+RSVG_SOURCE = librsvg-$(RSVG_VER).tar.xz
 
-$(ARCHIVE)/$(RUSTC_SOURCE):
-	$(DOWNLOAD) https://static.rust-lang.org/dist/$(RUSTC_SOURCE)
+$(ARCHIVE)/$(RSVG_SOURCE):
+	$(DOWNLOAD) https://download.gnome.org/sources/librsvg/2.40/$(RSVG_SOURCE)
 
-$(D)/rustc: $(ARCHIVE)/$(RUSTC_SOURCE) $(D)/bootstrap
+$(D)/librsvg: $(ARCHIVE)/$(RSVG_SOURCE) $(D)/bootstrap
 	$(START_BUILD)
-	$(REMOVE)/rustc-$(RUSTC_VER)-src
-	$(UNTAR)/$(RUSTC_SOURCE)
-	$(CHDIR)/rustc-$(RUSTC_VER)-src; \
+	$(REMOVE)/librsvg-$(RSVG_VER)
+	$(UNTAR)/$(RSVG_SOURCE)
+	$(CHDIR)/librsvg-$(RSVG_VER); \
 		$(CONFIGURE) \
 			--prefix=/usr \
 			; \
-		export RUSTFLAGS="$RUSTFLAGS -C link-args=-lffi"; \
-		python3 ./x.py build --exclude src/tools/miri; \
+		$(MAKE); 
 		$(MAKE) install DESTDIR=$(TARGET_DIR)
-	$(REWRITE_LIBTOOL)/libatomic_ops.la
-	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/atomic_ops.pc
-	$(REMOVE)/rustc-$(RUSTC_VER)-src
+	$(REWRITE_LIBTOOL)/librsvg.la
+	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/librsvg.pc
+	$(REMOVE)/librsvg-$(RSVG_VER)
 	$(TOUCH)
 
 #
