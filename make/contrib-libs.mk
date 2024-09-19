@@ -2478,7 +2478,7 @@ PANGO_SOURCE = pango-$(PANGO_VER).tar.xz
 $(ARCHIVE)/$(PANGO_SOURCE):
 	$(DOWNLOAD) http://ftp.gnome.org/pub/gnome/sources/pango/1.30/$(PANGO_SOURCE)
 
-$(D)/pango: $(ARCHIVE)/$(PANGO_SOURCE) $(D)/bootstrap
+$(D)/pango: $(ARCHIVE)/$(PANGO_SOURCE) $(D)/bootstrap $(D)/cairo
 	$(START_BUILD)
 	$(REMOVE)/pango-$(PANGO_VER)
 	$(UNTAR)/$(PANGO_SOURCE)
@@ -2491,6 +2491,9 @@ $(D)/pango: $(ARCHIVE)/$(PANGO_SOURCE) $(D)/bootstrap
 	$(REWRITE_LIBTOOL)/libpango-1.0.la
 	$(REWRITE_LIBTOOL)/libpangocairo-1.0.la
 	$(REWRITE_LIBTOOL)/libpangoft2-1.0.la
+	$(REWRITE_LIBTOOLDEP)/libpango-1.0.la
+	$(REWRITE_LIBTOOLDEP)/libpangocairo-1.0.la
+	$(REWRITE_LIBTOOLDEP)/libpangoft2-1.0.la
 	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/pango.pc
 	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/pangocairo.pc
 	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/pangoft2.pc
@@ -2521,6 +2524,7 @@ $(D)/gdk-pixbuf: $(ARCHIVE)/$(GDK-PIXBUF_SOURCE) $(D)/bootstrap $(D)/shared-mime
 		$(MAKE); \
 		$(MAKE) install DESTDIR=$(TARGET_DIR)
 	$(REWRITE_LIBTOOL)/libgdk_pixbuf-2.0.la
+	$(REWRITE_LIBTOOLDEP)/libgdk_pixbuf-2.0.la
 	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/gdk-pixbuf-2.0.pc
 	$(REMOVE)/gdk-pixbuf-$(GDK-PIXBUF_VER)
 	$(TOUCH)
@@ -2534,14 +2538,15 @@ CROCO_SOURCE = libcroco-$(CROCO_VER).tar.xz
 $(ARCHIVE)/$(CROCO_SOURCE):
 	$(DOWNLOAD) http://ftp.gnome.org/pub/gnome/sources/libcroco/0.6/$(CROCO_SOURCE)
 
-$(D)/libcroco: $(ARCHIVE)/$(CROCO_SOURCE) $(D)/bootstrap $(D)/gdk-pixbuf
+$(D)/libcroco: $(ARCHIVE)/$(CROCO_SOURCE) $(D)/bootstrap $(D)/gdk-pixbuf $(D)/pango
 	$(START_BUILD)
 	$(REMOVE)/libcroco-$(CROCO_VER)
 	$(UNTAR)/$(CROCO_SOURCE)
 	$(CHDIR)/libcroco-$(CROCO_VER); \
 		$(CONFIGURE) \
 			--prefix=/usr \
-			--disable-tools --enable-pango=no \
+			--disable-tools \
+			--enable-pango=yes \
 			; \
 		$(MAKE); \
 		$(MAKE) install DESTDIR=$(TARGET_DIR)
@@ -2551,15 +2556,15 @@ $(D)/libcroco: $(ARCHIVE)/$(CROCO_SOURCE) $(D)/bootstrap $(D)/gdk-pixbuf
 	$(TOUCH)
 	
 #
-# rsvg library
+# rsvg library 2.31.0
 #
-RSVG_VER = 2.31.0
-RSVG_SOURCE = librsvg-$(RSVG_VER).tar.gz
+RSVG_VER = 2.36.4
+RSVG_SOURCE = librsvg-$(RSVG_VER).tar.xz
 
 $(ARCHIVE)/$(RSVG_SOURCE):
-	$(DOWNLOAD) https://download.gnome.org/sources/librsvg/2.31/$(RSVG_SOURCE)
+	$(DOWNLOAD) https://download.gnome.org/sources/librsvg/2.36/$(RSVG_SOURCE)
 
-$(D)/librsvg: $(ARCHIVE)/$(RSVG_SOURCE) $(D)/bootstrap $(D)/gdk-pixbuf $(D)/libcroco $(D)/cairo $(D)/pango
+$(D)/librsvg: $(ARCHIVE)/$(RSVG_SOURCE) $(D)/bootstrap $(D)/gdk-pixbuf $(D)/libcroco $(D)/pango 
 	$(START_BUILD)
 	$(REMOVE)/librsvg-$(RSVG_VER)
 	$(UNTAR)/$(RSVG_SOURCE)
@@ -2567,8 +2572,9 @@ $(D)/librsvg: $(ARCHIVE)/$(RSVG_SOURCE) $(D)/bootstrap $(D)/gdk-pixbuf $(D)/libc
 		$(CONFIGURE) \
 			--prefix=/usr \
 			--disable-tools \
-			--disable-pixbuf-loader \
 			--disable-static \
+			--disable-pixbuf-loader \
+			--enable-introspection=no \
 			--disable-gtk-theme \
 			; \
 		$(MAKE); \
@@ -2592,7 +2598,7 @@ CAIRO_OPTS ?= \
 $(ARCHIVE)/$(CAIRO_SOURCE):
 	$(DOWNLOAD) https://www.cairographics.org/releases/$(CAIRO_SOURCE)
 
-$(D)/cairo: $(ARCHIVE)/$(CAIRO_SOURCE) $(D)/bootstrap $(D)/libglib2 $(D)/libpng $(D)/pixman $(D)/zlib $(D)/freetype $(D)/fontconfig $(D)/glesv2
+$(D)/cairo: $(ARCHIVE)/$(CAIRO_SOURCE) $(D)/bootstrap $(D)/libglib2 $(D)/libpng $(D)/pixman $(D)/zlib $(D)/freetype $(D)/fontconfig $(D)/directfb $(D)/glesv2
 	$(START_BUILD)
 	$(REMOVE)/cairo-$(CAIRO_VER)
 	$(UNTAR)/$(CAIRO_SOURCE)
@@ -2604,10 +2610,9 @@ $(D)/cairo: $(ARCHIVE)/$(CAIRO_SOURCE) $(D)/bootstrap $(D)/libglib2 $(D)/libpng 
 			--disable-xlib \
 			--disable-xcb \
 			$(CAIRO_OPTS) \
+			--enable-directfb=yes \
 			--disable-gl \
 			--enable-tee \
-			--enable-fontconfig \
-			--enable-freetype \
 		; \
 		$(MAKE) all; \
 		$(MAKE) install DESTDIR=$(TARGET_DIR)
@@ -2621,6 +2626,10 @@ $(D)/cairo: $(ARCHIVE)/$(CAIRO_SOURCE) $(D)/bootstrap $(D)/libglib2 $(D)/libpng 
 	$(REWRITE_LIBTOOL)/libcairo-script-interpreter.la
 	$(REWRITE_LIBTOOL)/libcairo-gobject.la
 	$(REWRITE_LIBTOOL)/cairo/libcairo-trace.la
+	$(REWRITE_LIBTOOLDEP)/libcairo.la
+	$(REWRITE_LIBTOOLDEP)/libcairo-gobject.la
+	$(REWRITE_LIBTOOLDEP)/libcairo-script-interpreter.la
+	$(REWRITE_LIBTOOLDEP)/libcairo-gobject.la
 	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/cairo.pc
 	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/cairo-ft.pc
 	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/cairo-fc.pc
