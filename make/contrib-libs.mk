@@ -344,7 +344,6 @@ $(D)/libbluray: $(D)/bootstrap $(ARCHIVE)/$(LIBBLURAY_SOURCE) $(D)/freetype
 			--disable-doxygen-ps \
 			--disable-doxygen-pdf \
 			--disable-examples \
-			--without-libxml2 \
 		; \
 		$(MAKE); \
 		$(MAKE) install DESTDIR=$(TARGET_DIR)
@@ -2455,7 +2454,7 @@ SHARED-MIME-INFO_SOURCE = shared-mime-info-$(SHARED-MIME-INFO_VER).tar.xz
 $(ARCHIVE)/$(SHARED-MIME-INFO_SOURCE):
 	$(DOWNLOAD) https://people.freedesktop.org/~hadess/$(SHARED-MIME-INFO_SOURCE)
 
-$(D)/shared-mime-info: $(ARCHIVE)/$(SHARED-MIME-INFO_SOURCE) $(D)/bootstrap
+$(D)/shared-mime-info: $(ARCHIVE)/$(SHARED-MIME-INFO_SOURCE) $(D)/bootstrap $(D)/libxml2 $(D)/libglib2
 	$(START_BUILD)
 	$(REMOVE)/shared-mime-info-$(SHARED-MIME-INFO_VER)
 	$(UNTAR)/$(SHARED-MIME-INFO_SOURCE)
@@ -2508,7 +2507,7 @@ GDK-PIXBUF_SOURCE = gdk-pixbuf-$(GDK-PIXBUF_VER).tar.xz
 $(ARCHIVE)/$(GDK-PIXBUF_SOURCE):
 	$(DOWNLOAD) http://ftp.gnome.org/pub/gnome/sources/gdk-pixbuf/2.28/$(GDK-PIXBUF_SOURCE)
 
-$(D)/gdk-pixbuf: $(ARCHIVE)/$(GDK-PIXBUF_SOURCE) $(D)/bootstrap $(D)/shared-mime-info
+$(D)/gdk-pixbuf: $(ARCHIVE)/$(GDK-PIXBUF_SOURCE) $(D)/bootstrap $(D)/shared-mime-info $(D)/libjpeg $(D)/libpng
 	$(START_BUILD)
 	$(REMOVE)/gdk-pixbuf-$(GDK-PIXBUF_VER)
 	$(UNTAR)/$(GDK-PIXBUF_SOURCE)
@@ -2560,7 +2559,7 @@ RSVG_SOURCE = librsvg-$(RSVG_VER).tar.gz
 $(ARCHIVE)/$(RSVG_SOURCE):
 	$(DOWNLOAD) https://download.gnome.org/sources/librsvg/2.31/$(RSVG_SOURCE)
 
-$(D)/librsvg: $(ARCHIVE)/$(RSVG_SOURCE) $(D)/bootstrap $(D)/gdk-pixbuf $(D)/libcroco
+$(D)/librsvg: $(ARCHIVE)/$(RSVG_SOURCE) $(D)/bootstrap $(D)/gdk-pixbuf $(D)/libcroco $(D)/cairo $(D)/pango
 	$(START_BUILD)
 	$(REMOVE)/librsvg-$(RSVG_VER)
 	$(UNTAR)/$(RSVG_SOURCE)
