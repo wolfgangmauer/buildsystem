@@ -327,6 +327,7 @@ include make/crosstool.mk
 endif
 include make/bootstrap.mk
 include make/contrib-libs.mk
+include make/directfb.mk
 include make/contrib-apps.mk
 include make/ffmpeg.mk
 include make/gstreamer.mk
