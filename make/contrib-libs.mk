@@ -2447,26 +2447,135 @@ $(D)/atomic_ops: $(ARCHIVE)/$(ATOMIC_OPS_SOURCE) $(D)/bootstrap
 	$(TOUCH)
 
 #
+# shared-mime-info
+#
+SHARED-MIME-INFO_VER = 1.8
+SHARED-MIME-INFO_SOURCE = shared-mime-info-$(SHARED-MIME-INFO_VER).tar.xz
+
+$(ARCHIVE)/$(SHARED-MIME-INFO_SOURCE):
+	$(DOWNLOAD) https://people.freedesktop.org/~hadess/$(SHARED-MIME-INFO_SOURCE)
+
+$(D)/shared-mime-info: $(ARCHIVE)/$(SHARED-MIME-INFO_SOURCE) $(D)/bootstrap
+	$(START_BUILD)
+	$(REMOVE)/shared-mime-info-$(SHARED-MIME-INFO_VER)
+	$(UNTAR)/$(SHARED-MIME-INFO_SOURCE)
+	$(CHDIR)/shared-mime-info-$(SHARED-MIME-INFO_VER); \
+		$(CONFIGURE) \
+			--prefix=/usr \
+			; \
+		$(MAKE); \
+		$(MAKE) install DESTDIR=$(TARGET_DIR); \
+		cp shared-mime-info.pc $(PKG_CONFIG_PATH)
+	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/shared-mime-info.pc
+	$(REMOVE)/shared-mime-info-$(SHARED-MIME-INFO_VER)
+	$(TOUCH)
+	
+#
+# pango library
+#
+PANGO_VER = 1.30.1
+PANGO_SOURCE = pango-$(PANGO_VER).tar.xz
+
+$(ARCHIVE)/$(PANGO_SOURCE):
+	$(DOWNLOAD) http://ftp.gnome.org/pub/gnome/sources/pango/1.30/$(PANGO_SOURCE)
+
+$(D)/pango: $(ARCHIVE)/$(PANGO_SOURCE) $(D)/bootstrap
+	$(START_BUILD)
+	$(REMOVE)/pango-$(PANGO_VER)
+	$(UNTAR)/$(PANGO_SOURCE)
+	$(CHDIR)/pango-$(PANGO_VER); \
+		$(CONFIGURE) \
+			--prefix=/usr --without-tests --without-examples --without-x --without-xft \
+			; \
+		$(MAKE); \
+		$(MAKE) install DESTDIR=$(TARGET_DIR)
+	$(REWRITE_LIBTOOL)/libpango-1.0.la
+	$(REWRITE_LIBTOOL)/libpangocairo-1.0.la
+	$(REWRITE_LIBTOOL)/libpangoft2-1.0.la
+	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/pango.pc
+	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/pangocairo.pc
+	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/pangoft2.pc
+	$(REMOVE)/pango-$(PANGO_VER)
+	$(TOUCH)
+	
+	
+#
+# gdk-pixbuf library 
+#
+GDK-PIXBUF_VER = 2.28.2
+GDK-PIXBUF_SOURCE = gdk-pixbuf-$(GDK-PIXBUF_VER).tar.xz
+
+$(ARCHIVE)/$(GDK-PIXBUF_SOURCE):
+	$(DOWNLOAD) http://ftp.gnome.org/pub/gnome/sources/gdk-pixbuf/2.28/$(GDK-PIXBUF_SOURCE)
+
+$(D)/gdk-pixbuf: $(ARCHIVE)/$(GDK-PIXBUF_SOURCE) $(D)/bootstrap $(D)/shared-mime-info
+	$(START_BUILD)
+	$(REMOVE)/gdk-pixbuf-$(GDK-PIXBUF_VER)
+	$(UNTAR)/$(GDK-PIXBUF_SOURCE)
+	$(CHDIR)/gdk-pixbuf-$(GDK-PIXBUF_VER); \
+		$(CONFIGURE) \
+			--prefix=/usr \
+			--without-libtiff \
+			--disable-modules \
+			--enable-gio-sniffing=no \
+			; \
+		$(MAKE); \
+		$(MAKE) install DESTDIR=$(TARGET_DIR)
+	$(REWRITE_LIBTOOL)/libgdk_pixbuf-2.0.la
+	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/gdk-pixbuf-2.0.pc
+	$(REMOVE)/gdk-pixbuf-$(GDK-PIXBUF_VER)
+	$(TOUCH)
+
+#
+# libcroco library
+#
+CROCO_VER = 0.6.13
+CROCO_SOURCE = libcroco-$(CROCO_VER).tar.xz
+
+$(ARCHIVE)/$(CROCO_SOURCE):
+	$(DOWNLOAD) http://ftp.gnome.org/pub/gnome/sources/libcroco/0.6/$(CROCO_SOURCE)
+
+$(D)/libcroco: $(ARCHIVE)/$(CROCO_SOURCE) $(D)/bootstrap $(D)/gdk-pixbuf
+	$(START_BUILD)
+	$(REMOVE)/libcroco-$(CROCO_VER)
+	$(UNTAR)/$(CROCO_SOURCE)
+	$(CHDIR)/libcroco-$(CROCO_VER); \
+		$(CONFIGURE) \
+			--prefix=/usr \
+			--disable-tools --enable-pango=no \
+			; \
+		$(MAKE); \
+		$(MAKE) install DESTDIR=$(TARGET_DIR)
+	$(REWRITE_LIBTOOL)/libcroco-0.6.la
+	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/libcroco-0.6.pc
+	$(REMOVE)/libcroco-$(CROCO_VER)
+	$(TOUCH)
+	
+#
 # rsvg library
 #
-RSVG_VER = 2.40.20
-RSVG_SOURCE = librsvg-$(RSVG_VER).tar.xz
+RSVG_VER = 2.31.0
+RSVG_SOURCE = librsvg-$(RSVG_VER).tar.gz
 
 $(ARCHIVE)/$(RSVG_SOURCE):
-	$(DOWNLOAD) https://download.gnome.org/sources/librsvg/2.40/$(RSVG_SOURCE)
+	$(DOWNLOAD) https://download.gnome.org/sources/librsvg/2.31/$(RSVG_SOURCE)
 
-$(D)/librsvg: $(ARCHIVE)/$(RSVG_SOURCE) $(D)/bootstrap
+$(D)/librsvg: $(ARCHIVE)/$(RSVG_SOURCE) $(D)/bootstrap $(D)/gdk-pixbuf $(D)/libcroco
 	$(START_BUILD)
 	$(REMOVE)/librsvg-$(RSVG_VER)
 	$(UNTAR)/$(RSVG_SOURCE)
 	$(CHDIR)/librsvg-$(RSVG_VER); \
 		$(CONFIGURE) \
 			--prefix=/usr \
+			--disable-tools \
+			--disable-pixbuf-loader \
+			--disable-static \
+			--disable-gtk-theme \
 			; \
-		$(MAKE); 
+		$(MAKE); \
 		$(MAKE) install DESTDIR=$(TARGET_DIR)
-	$(REWRITE_LIBTOOL)/librsvg.la
-	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/librsvg.pc
+	$(REWRITE_LIBTOOL)/librsvg-2.la
+	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/librsvg-2.0.pc
 	$(REMOVE)/librsvg-$(RSVG_VER)
 	$(TOUCH)
 
