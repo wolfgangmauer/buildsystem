@@ -344,6 +344,7 @@ $(D)/libbluray: $(D)/bootstrap $(ARCHIVE)/$(LIBBLURAY_SOURCE) $(D)/freetype
 			--disable-doxygen-ps \
 			--disable-doxygen-pdf \
 			--disable-examples \
+			--without-libxml2 \
 		; \
 		$(MAKE); \
 		$(MAKE) install DESTDIR=$(TARGET_DIR)
@@ -2420,56 +2421,6 @@ $(D)/pixman: $(ARCHIVE)/$(PIXMAN_SOURCE) $(D)/bootstrap $(D)/zlib $(D)/libpng
 	$(TOUCH)
 
 #
-# atomic_ops library
-#
-ATOMIC_OPS_VER = 7.6.8
-ATOMIC_OPS_SOURCE = libatomic_ops-$(ATOMIC_OPS_VER).tar.gz
-
-$(ARCHIVE)/$(ATOMIC_OPS_SOURCE):
-	$(DOWNLOAD)  https://github.com/ivmai/libatomic_ops/releases/download/v7.6.8/$(ATOMIC_OPS_SOURCE)
-
-$(D)/atomic_ops: $(ARCHIVE)/$(ATOMIC_OPS_SOURCE) $(D)/bootstrap
-	$(START_BUILD)
-	$(REMOVE)/libatomic_ops-$(ATOMIC_OPS_VER)
-	$(UNTAR)/$(ATOMIC_OPS_SOURCE)
-	$(CHDIR)/libatomic_ops-$(ATOMIC_OPS_VER); \
-		$(CONFIGURE) \
-			--prefix=/usr \
-			--enable-shared  \
-			--disable-static \
-			; \
-		$(MAKE) all; \
-		$(MAKE) install DESTDIR=$(TARGET_DIR)
-	$(REWRITE_LIBTOOL)/libatomic_ops.la
-	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/atomic_ops.pc
-	$(REMOVE)/libatomic_ops-$(ATOMIC_OPS_VER)
-	$(TOUCH)
-
-#
-# shared-mime-info
-#
-SHARED-MIME-INFO_VER = 1.8
-SHARED-MIME-INFO_SOURCE = shared-mime-info-$(SHARED-MIME-INFO_VER).tar.xz
-
-$(ARCHIVE)/$(SHARED-MIME-INFO_SOURCE):
-	$(DOWNLOAD) https://people.freedesktop.org/~hadess/$(SHARED-MIME-INFO_SOURCE)
-
-$(D)/shared-mime-info: $(ARCHIVE)/$(SHARED-MIME-INFO_SOURCE) $(D)/bootstrap $(D)/libxml2 $(D)/libglib2
-	$(START_BUILD)
-	$(REMOVE)/shared-mime-info-$(SHARED-MIME-INFO_VER)
-	$(UNTAR)/$(SHARED-MIME-INFO_SOURCE)
-	$(CHDIR)/shared-mime-info-$(SHARED-MIME-INFO_VER); \
-		$(CONFIGURE) \
-			--prefix=/usr \
-			; \
-		$(MAKE); \
-		$(MAKE) install DESTDIR=$(TARGET_DIR); \
-		cp shared-mime-info.pc $(PKG_CONFIG_PATH)
-	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/shared-mime-info.pc
-	$(REMOVE)/shared-mime-info-$(SHARED-MIME-INFO_VER)
-	$(TOUCH)
-	
-#
 # pango library
 #
 PANGO_VER = 1.30.1
@@ -2500,7 +2451,56 @@ $(D)/pango: $(ARCHIVE)/$(PANGO_SOURCE) $(D)/bootstrap $(D)/cairo
 	$(REMOVE)/pango-$(PANGO_VER)
 	$(TOUCH)
 	
+#
+# shared-mime-info
+#
+SHARED-MIME-INFO_VER = 1.8
+SHARED-MIME-INFO_SOURCE = shared-mime-info-$(SHARED-MIME-INFO_VER).tar.xz
+
+$(ARCHIVE)/$(SHARED-MIME-INFO_SOURCE):
+	$(DOWNLOAD) https://people.freedesktop.org/~hadess/$(SHARED-MIME-INFO_SOURCE)
+
+$(D)/shared-mime-info: $(ARCHIVE)/$(SHARED-MIME-INFO_SOURCE) $(D)/bootstrap $(D)/libxml2 $(D)/libglib2
+	$(START_BUILD)
+	$(REMOVE)/shared-mime-info-$(SHARED-MIME-INFO_VER)
+	$(UNTAR)/$(SHARED-MIME-INFO_SOURCE)
+	$(CHDIR)/shared-mime-info-$(SHARED-MIME-INFO_VER); \
+		$(CONFIGURE) \
+			--prefix=/usr \
+			; \
+		$(MAKE); \
+		$(MAKE) install DESTDIR=$(TARGET_DIR); \
+		cp shared-mime-info.pc $(PKG_CONFIG_PATH)
+	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/shared-mime-info.pc
+	$(REMOVE)/shared-mime-info-$(SHARED-MIME-INFO_VER)
+	$(TOUCH)
 	
+#
+# atomic_ops library
+#
+ATOMIC_OPS_VER = 7.6.8
+ATOMIC_OPS_SOURCE = libatomic_ops-$(ATOMIC_OPS_VER).tar.gz
+
+$(ARCHIVE)/$(ATOMIC_OPS_SOURCE):
+	$(DOWNLOAD)  https://github.com/ivmai/libatomic_ops/releases/download/v7.6.8/$(ATOMIC_OPS_SOURCE)
+
+$(D)/atomic_ops: $(ARCHIVE)/$(ATOMIC_OPS_SOURCE) $(D)/bootstrap
+	$(START_BUILD)
+	$(REMOVE)/libatomic_ops-$(ATOMIC_OPS_VER)
+	$(UNTAR)/$(ATOMIC_OPS_SOURCE)
+	$(CHDIR)/libatomic_ops-$(ATOMIC_OPS_VER); \
+		$(CONFIGURE) \
+			--prefix=/usr \
+			--enable-shared  \
+			--disable-static \
+			; \
+		$(MAKE) all; \
+		$(MAKE) install DESTDIR=$(TARGET_DIR)
+	$(REWRITE_LIBTOOL)/libatomic_ops.la
+	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/atomic_ops.pc
+	$(REMOVE)/libatomic_ops-$(ATOMIC_OPS_VER)
+	$(TOUCH)
+
 #
 # gdk-pixbuf library 
 #
@@ -2526,8 +2526,8 @@ $(D)/gdk-pixbuf: $(ARCHIVE)/$(GDK-PIXBUF_SOURCE) $(D)/bootstrap $(D)/shared-mime
 	$(REWRITE_LIBTOOL)/libgdk_pixbuf-2.0.la
 	$(REWRITE_LIBTOOLDEP)/libgdk_pixbuf-2.0.la
 	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/gdk-pixbuf-2.0.pc
-	$(REMOVE)/gdk-pixbuf-$(GDK-PIXBUF_VER)
-	$(TOUCH)
+#	$(REMOVE)/gdk-pixbuf-$(GDK-PIXBUF_VER)
+#	$(TOUCH)
 
 #
 # libcroco library
@@ -2569,16 +2569,16 @@ $(D)/librsvg: $(ARCHIVE)/$(RSVG_SOURCE) $(D)/bootstrap $(D)/gdk-pixbuf $(D)/libc
 	$(REMOVE)/librsvg-$(RSVG_VER)
 	$(UNTAR)/$(RSVG_SOURCE)
 	$(CHDIR)/librsvg-$(RSVG_VER); \
-		$(CONFIGURE) \
-			--prefix=/usr \
-			--disable-tools \
-			--disable-static \
-			--disable-pixbuf-loader \
-			--enable-introspection=no \
-			--disable-gtk-theme \
-			; \
-		$(MAKE); \
-		$(MAKE) install DESTDIR=$(TARGET_DIR)
+	$(CONFIGURE) \
+		--prefix=/usr \
+		--disable-tools \
+		--disable-static \
+		--disable-pixbuf-loader \
+		--enable-introspection=no \
+		--disable-gtk-theme \
+	; \
+	$(MAKE); \
+	$(MAKE) install DESTDIR=$(TARGET_DIR)
 	$(REWRITE_LIBTOOL)/librsvg-2.la
 	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/librsvg-2.0.pc
 	$(REMOVE)/librsvg-$(RSVG_VER)
@@ -2598,7 +2598,7 @@ CAIRO_OPTS ?= \
 $(ARCHIVE)/$(CAIRO_SOURCE):
 	$(DOWNLOAD) https://www.cairographics.org/releases/$(CAIRO_SOURCE)
 
-$(D)/cairo: $(ARCHIVE)/$(CAIRO_SOURCE) $(D)/bootstrap $(D)/libglib2 $(D)/libpng $(D)/pixman $(D)/zlib $(D)/freetype $(D)/fontconfig $(D)/directfb $(D)/glesv2
+$(D)/cairo: $(ARCHIVE)/$(CAIRO_SOURCE) $(D)/bootstrap $(D)/libglib2 $(D)/directfb $(D)/libpng $(D)/pixman $(D)/zlib $(D)/freetype $(D)/fontconfig $(D)/glesv2
 	$(START_BUILD)
 	$(REMOVE)/cairo-$(CAIRO_VER)
 	$(UNTAR)/$(CAIRO_SOURCE)
@@ -2610,9 +2610,11 @@ $(D)/cairo: $(ARCHIVE)/$(CAIRO_SOURCE) $(D)/bootstrap $(D)/libglib2 $(D)/libpng 
 			--disable-xlib \
 			--disable-xcb \
 			$(CAIRO_OPTS) \
-			--enable-directfb=yes \
 			--disable-gl \
 			--enable-tee \
+			--enable-directfb \
+			--enable-fontconfig \
+			--enable-freetype \
 		; \
 		$(MAKE) all; \
 		$(MAKE) install DESTDIR=$(TARGET_DIR)
@@ -2626,10 +2628,6 @@ $(D)/cairo: $(ARCHIVE)/$(CAIRO_SOURCE) $(D)/bootstrap $(D)/libglib2 $(D)/libpng 
 	$(REWRITE_LIBTOOL)/libcairo-script-interpreter.la
 	$(REWRITE_LIBTOOL)/libcairo-gobject.la
 	$(REWRITE_LIBTOOL)/cairo/libcairo-trace.la
-	$(REWRITE_LIBTOOLDEP)/libcairo.la
-	$(REWRITE_LIBTOOLDEP)/libcairo-gobject.la
-	$(REWRITE_LIBTOOLDEP)/libcairo-script-interpreter.la
-	$(REWRITE_LIBTOOLDEP)/libcairo-gobject.la
 	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/cairo.pc
 	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/cairo-ft.pc
 	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/cairo-fc.pc
@@ -2640,9 +2638,95 @@ $(D)/cairo: $(ARCHIVE)/$(CAIRO_SOURCE) $(D)/bootstrap $(D)/libglib2 $(D)/libpng 
 	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/cairo-png.pc
 	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/cairo-ps.pc
 	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/cairo-script.pc
+	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/cairo-directfb.pc
 	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/cairo-svg.pc
 	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/cairo-tee.pc
 	$(REMOVE)/cairo-$(CAIRO_VER)
+	$(TOUCH)
+
+#
+# gtk-sharp library https://download.gnome.org/sources/gtk-sharp/2.12/
+#
+GTK-SHARP_VER = 2.12.45
+GTK-SHARP_SOURCE = gtk-sharp-$(GTK-SHARP_VER).tar.gz
+GTK-SHARP_PATCH = 0001-fix-range-namespace-ambiguity.patch
+$(ARCHIVE)/$(GTK-SHARP_SOURCE):
+	$(DOWNLOAD) https://download.mono-project.com/sources/gtk-sharp212/$(GTK-SHARP_SOURCE)
+
+$(D)/gtk-sharp: $(ARCHIVE)/$(GTK-SHARP_SOURCE) $(D)/bootstrap $(D)/libcroco $(D)/pango $(D)/mono $(D)/cairo $(D)/gtk+-2
+	$(START_BUILD)
+	$(REMOVE)/gtk-sharp-$(GTK-SHARP_VER)
+	$(UNTAR)/$(GTK-SHARP_SOURCE)
+	$(CHDIR)/gtk-sharp-$(GTK-SHARP_VER); \
+	$(call apply_patches, $(GTK-SHARP_PATCH)); \
+	$(CONFIGURE) \
+		--prefix=/usr \
+		--disable-tools \
+		--disable-static \
+		--disable-pixbuf-loader \
+		--enable-introspection=no \
+		--disable-gtk-theme \
+	; \
+	$(MAKE); \
+	$(MAKE) install DESTDIR=$(TARGET_DIR)
+	$(REMOVE)/gtk-sharp-$(GTK-SHARP_VER)
+	$(TOUCH)
+
+#
+# gtk+2 library 
+#
+GTK+-2_VER = 2.24.33
+GTK+-2_SOURCE = gtk+-$(GTK+-2_VER).tar.xz
+
+$(ARCHIVE)/$(GTK+-2_SOURCE):
+	$(DOWNLOAD) https://download.gnome.org/sources/gtk+/2.24/$(GTK+-2_SOURCE)
+
+$(D)/gtk+-2: $(ARCHIVE)/$(GTK+-2_SOURCE) $(D)/bootstrap $(D)/libcroco $(D)/pango $(D)/cairo $(D)/atk $(D)/directfb
+	$(START_BUILD)
+	$(REMOVE)/gtk+-$(GTK+-2_VER)
+	$(UNTAR)/$(GTK+-2_SOURCE)
+	$(CHDIR)/gtk+-$(GTK+-2_VER); \
+	$(CONFIGURE) \
+		--prefix=/usr \
+		--disable-tools \
+		--disable-static \
+		--disable-pixbuf-loader \
+		--enable-introspection=no \
+		--disable-gtk-theme \
+		--without-libtiff \
+		--without-x11 \
+		--with-gdktarget=directfb \
+	; \
+	$(MAKE); \
+	$(MAKE) install DESTDIR=$(TARGET_DIR)
+	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/gdk-2.0.pc
+	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/gdk-directfb-2.0.pc
+	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/gtk+-2.0.pc
+	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/gtk+-directfb-2.0.pc
+	$(REWRITE_PKGCONF) $(PKG_CONFIG_PATH)/gail.pc
+	$(REMOVE)/gtk+-$(GTK+-2_VER)
+	$(TOUCH)
+
+#
+# atk library 
+#
+ATK_VER = 2.24.0
+ATK_SOURCE = atk-$(ATK_VER).tar.xz
+
+$(ARCHIVE)/$(ATK_SOURCE):
+	$(DOWNLOAD) https://download.gnome.org/sources/atk/2.24/$(ATK_SOURCE)
+
+$(D)/atk: $(ARCHIVE)/$(ATK_SOURCE) $(D)/bootstrap $(D)/gdk-pixbuf $(D)/libcroco $(D)/pango $(D)/cairo
+	$(START_BUILD)
+	$(REMOVE)/atk-$(ATK_VER)
+	$(UNTAR)/$(ATK_SOURCE)
+	$(CHDIR)/atk-$(ATK_VER); \
+	$(CONFIGURE) \
+		--prefix=/usr \
+	; \
+	$(MAKE); \
+	$(MAKE) install DESTDIR=$(TARGET_DIR)
+	$(REMOVE)/atk-$(ATK_VER)
 	$(TOUCH)
 
 #
